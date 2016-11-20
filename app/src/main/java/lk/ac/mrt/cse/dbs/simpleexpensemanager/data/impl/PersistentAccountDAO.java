@@ -6,6 +6,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 import lk.ac.mrt.cse.dbs.simpleexpensemanager.DatabaseHelper;
@@ -20,18 +21,16 @@ import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.model.ExpenseType;
  */
 
 public class PersistentAccountDAO implements AccountDAO {
-    private DatabaseHelper db;
-    Context context;
+    private final SQLiteDatabase database;
 
     public PersistentAccountDAO(Context context) {
-        this.context = context;
-        db = new DatabaseHelper(context);
+        DatabaseHelper dbHelper = new DatabaseHelper(context);
+        database = dbHelper.getWritableDatabase();
     }
 
     @Override
     public List<String> getAccountNumbersList() {
-        SQLiteDatabase database = db.getReadableDatabase();
-        List<String> accountNumbersList = new ArrayList<>();
+        List<String> accountNumbersList = new LinkedList<>();
 
         Cursor c = database.rawQuery("SELECT " + ExpenseManagerContract.AccountEntry.COLUMN_ACCOUNT_NO + " FROM " + ExpenseManagerContract.AccountEntry.TABLE_NAME, null);
 
@@ -48,7 +47,6 @@ public class PersistentAccountDAO implements AccountDAO {
 
     @Override
     public List<Account> getAccountsList() {
-        SQLiteDatabase database = db.getReadableDatabase();
         List<Account> accounts = new ArrayList<>();
 
         Cursor c = database.rawQuery("SELECT * FROM " + ExpenseManagerContract.AccountEntry.TABLE_NAME, null);
@@ -71,10 +69,9 @@ public class PersistentAccountDAO implements AccountDAO {
 
     @Override
     public Account getAccount(String accountNo) throws InvalidAccountException {
-        SQLiteDatabase database = db.getReadableDatabase();
         Account account = null;
 
-        Cursor c = database.rawQuery("SELECT * FROM " + ExpenseManagerContract.AccountEntry.TABLE_NAME + " WHERE " + ExpenseManagerContract.AccountEntry.COLUMN_ACCOUNT_NO + "=" + accountNo + "'", null);
+        Cursor c = database.rawQuery("SELECT * FROM " + ExpenseManagerContract.AccountEntry.TABLE_NAME + " WHERE " + ExpenseManagerContract.AccountEntry.COLUMN_ACCOUNT_NO + "='" + accountNo + "'", null);
 
         if (c.moveToFirst()) {
             String bankName = c.getString(c.getColumnIndex(ExpenseManagerContract.AccountEntry.COLUMN_BANK_NAME));
@@ -93,8 +90,6 @@ public class PersistentAccountDAO implements AccountDAO {
 
     @Override
     public void addAccount(Account account) {
-
-        SQLiteDatabase database = db.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
 
         contentValues.put(ExpenseManagerContract.AccountEntry.COLUMN_ACCOUNT_NO, account.getAccountNo());
@@ -108,8 +103,7 @@ public class PersistentAccountDAO implements AccountDAO {
 
     @Override
     public void removeAccount(String accountNo) throws InvalidAccountException {
-        SQLiteDatabase database = db.getWritableDatabase();
-        int result = database.delete(ExpenseManagerContract.AccountEntry.TABLE_NAME, ExpenseManagerContract.AccountEntry.COLUMN_ACCOUNT_NO + " = " + accountNo, null);
+        int result = database.delete(ExpenseManagerContract.AccountEntry.TABLE_NAME, ExpenseManagerContract.AccountEntry.COLUMN_ACCOUNT_NO + " = '" + accountNo + "'", null);
         if (!(result > 0)) {
             String msg = "Account " + accountNo + " is invalid.";
             throw new InvalidAccountException(msg);
@@ -119,7 +113,6 @@ public class PersistentAccountDAO implements AccountDAO {
 
     @Override
     public void updateBalance(String accountNo, ExpenseType expenseType, double amount) throws InvalidAccountException {
-        SQLiteDatabase database = db.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
         switch (expenseType) {
             case EXPENSE:
@@ -129,6 +122,6 @@ public class PersistentAccountDAO implements AccountDAO {
                 contentValues.put(ExpenseManagerContract.AccountEntry.COLUMN_BALANCE, +amount);
                 break;
         }
-        database.update(ExpenseManagerContract.AccountEntry.TABLE_NAME, contentValues, " WHERE " + ExpenseManagerContract.AccountEntry.COLUMN_ACCOUNT_NO + "=?", new String[]{accountNo});
+        database.update(ExpenseManagerContract.AccountEntry.TABLE_NAME, contentValues, ExpenseManagerContract.AccountEntry.COLUMN_ACCOUNT_NO + "='" + accountNo + "'", null);
     }
 }

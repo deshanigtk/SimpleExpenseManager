@@ -14,7 +14,7 @@ import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.model.Account;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
 
-    public static final String DATABASE_NAME="ExpenseManager.db";
+    public static final String DATABASE_NAME="140176F.db";
 
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null,1);

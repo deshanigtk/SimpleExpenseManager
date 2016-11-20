@@ -16,9 +16,10 @@ import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.model.Account;
 
 public class PersistentExpenseManager extends ExpenseManager {
 
-    Context context;
-    public PersistentExpenseManager(Context context){
+    private Context context;
+    public PersistentExpenseManager(Context context) throws ExpenseManagerException {
         this.context=context;
+        setup();
     }
     @Override
     public void setup() throws ExpenseManagerException {
